@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import '../../domain/models/ble_device.dart';
+import '../../domain/models/ble_service.dart';
+import '../../domain/models/ble_characteristic.dart';
 import '../../domain/repository/ble_repository.dart';
 
 class FlutterBluePlusRepository implements BleRepository {
@@ -93,9 +95,63 @@ class FlutterBluePlusRepository implements BleRepository {
   }
 
   @override
-  Future<List<Object>> discoverServices(BleDevice device) async {
+  Future<List<BleService>> discoverServices(BleDevice device) async {
     final nativeDevice = device.nativeDevice as BluetoothDevice;
-    return await nativeDevice.discoverServices();
+    final services = await nativeDevice.discoverServices();
+    return services.map((s) {
+      return BleService(
+        uuid: s.uuid.str,
+        deviceId: s.deviceId.str,
+        characteristics: s.characteristics.map((c) {
+          return BleCharacteristic(
+            uuid: c.uuid.str,
+            serviceUuid: c.serviceUuid.str,
+            deviceId: c.deviceId.str,
+            isReadable: c.properties.read,
+            isWritable: c.properties.write || c.properties.writeWithoutResponse,
+            isNotifiable: c.properties.notify || c.properties.indicate,
+            value: c.lastValue,
+            nativeCharacteristic: c,
+          );
+        }).toList(),
+        nativeService: s,
+      );
+    }).toList();
+  }
+
+  @override
+  Future<List<int>> readCharacteristic(BleCharacteristic characteristic) async {
+    final nativeChar = characteristic.nativeCharacteristic as BluetoothCharacteristic;
+    return await nativeChar.read();
+  }
+
+  @override
+  Future<void> writeCharacteristic(BleCharacteristic characteristic, List<int> value) async {
+    final nativeChar = characteristic.nativeCharacteristic as BluetoothCharacteristic;
+
+    // Determine write type based on properties
+    // If writeWithoutResponse is true, we can use withoutResponse: true
+    // If write is true, we should use withoutResponse: false (default)
+
+    bool withoutResponse = false;
+    if (characteristic.isWritable) {
+      // Check specific properties if available in our model, or infer
+      // For now, we'll default to withResponse (false) if 'write' property is true
+      // If only 'writeWithoutResponse' is true, then we set it to true.
+      final props = nativeChar.properties;
+      if (props.writeWithoutResponse && !props.write) {
+        withoutResponse = true;
+      }
+    }
+
+    await nativeChar.write(value, withoutResponse: withoutResponse);
+  }
+
+  @override
+  Stream<List<int>> subscribeToCharacteristic(BleCharacteristic characteristic) {
+    final nativeChar = characteristic.nativeCharacteristic as BluetoothCharacteristic;
+    nativeChar.setNotifyValue(true);
+    return nativeChar.onValueReceived;
   }
 
   @override

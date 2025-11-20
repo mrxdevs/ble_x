@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import '../../domain/models/ble_device.dart';
+import '../../domain/models/ble_service.dart';
+import '../../domain/models/ble_characteristic.dart';
 import '../../domain/repository/ble_repository.dart';
 
 class BleViewModel extends ChangeNotifier {
@@ -16,8 +18,8 @@ class BleViewModel extends ChangeNotifier {
   BleDevice? _connectedDevice;
   BleDevice? get connectedDevice => _connectedDevice;
 
-  List<Object> _services = [];
-  List<Object> get services => _services;
+  List<BleService> _services = [];
+  List<BleService> get services => _services;
 
   StreamSubscription? _scanSubscription;
   StreamSubscription? _isScanningSubscription;
@@ -85,6 +87,35 @@ class BleViewModel extends ChangeNotifier {
         print("Error discovering services: $e");
       }
     }
+  }
+
+  Future<List<int>> readCharacteristic(BleCharacteristic characteristic) async {
+    try {
+      final value = await _repository.readCharacteristic(characteristic);
+      // Update the characteristic value in our local model if needed
+      // For now, just return the value
+      return value;
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error reading characteristic: $e");
+      }
+      rethrow;
+    }
+  }
+
+  Future<void> writeCharacteristic(BleCharacteristic characteristic, List<int> value) async {
+    try {
+      await _repository.writeCharacteristic(characteristic, value);
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error writing characteristic: $e");
+      }
+      rethrow;
+    }
+  }
+
+  Stream<List<int>> subscribeToCharacteristic(BleCharacteristic characteristic) {
+    return _repository.subscribeToCharacteristic(characteristic);
   }
 
   @override
