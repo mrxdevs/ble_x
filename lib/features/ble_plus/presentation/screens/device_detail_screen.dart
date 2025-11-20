@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../../domain/models/ble_device.dart';
 import '../../domain/models/ble_service.dart';
 import '../../domain/models/ble_characteristic.dart';
-import '../../core/utils/ble_utils.dart';
+import '../../../../core/utils/ble_plus/ble_utils.dart';
 import '../viewmodels/ble_viewmodel.dart';
 
 class DeviceDetailScreen extends StatelessWidget {
