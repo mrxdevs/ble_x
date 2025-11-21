@@ -28,23 +28,34 @@ class PeripheralViewModel extends ChangeNotifier {
   Future<void> startAdvertising() async {
     if (_isAdvertising) return;
 
-    final AdvertiseData advertiseData = AdvertiseData(
-      serviceUuids: [_advertisingUuid],
-      localName: 'MyFlutterApp',
+    // These data is from offiacial repo
+
+    final AdvertiseData _advertiseData = AdvertiseData(
+      serviceUuid: _advertisingUuid,
+      serviceUuids: ['ffffffff-ffff-ffff-ffff-ffffffffffff'],
+      localName: 'test',
       includeDeviceName: true,
+      manufacturerId: 1234,
+      manufacturerData: Uint8List.fromList([1, 2, 3, 4, 5, 6, 7]),
     );
+
+    // final AdvertiseSetParameters advertiseSetParameters = AdvertiseSetParameters(connectable: true);
 
     final AdvertiseSettings advertiseSettings = AdvertiseSettings(
       advertiseMode: AdvertiseMode.advertiseModeLowLatency,
       txPowerLevel: AdvertiseTxPower.advertiseTxPowerHigh,
+      advertiseSet: true,
       connectable: true,
-      timeout: 0,
+      timeout: 170000,
     );
 
     try {
       await _blePeripheral.start(
-        advertiseData: advertiseData,
+        // advertiseData: advertiseData,
+        advertiseData: _advertiseData,
+
         advertiseSettings: advertiseSettings,
+        // advertiseSetParameters: advertiseSetParameters,
       );
     } catch (e) {
       if (kDebugMode) {
