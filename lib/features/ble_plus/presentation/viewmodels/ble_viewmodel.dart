@@ -58,14 +58,19 @@ class BleViewModel extends ChangeNotifier {
       _connectedDevice = device;
       notifyListeners();
 
-      // Discover services after connection
-      await discoverServices(device);
+      if (kDebugMode) {
+        print("✅ Connected to ${device.name}");
+      }
+
+      // Give user option to discover services manually
+      // This ensures connection is stable before discovery
     } catch (e) {
       if (kDebugMode) {
-        print("Error connecting: $e");
+        print("❌ Error connecting: $e");
       }
       _connectedDevice = null;
       notifyListeners();
+      rethrow;
     }
   }
 
@@ -80,20 +85,34 @@ class BleViewModel extends ChangeNotifier {
 
   Future<void> discoverServices(BleDevice device) async {
     try {
+      if (_connectedDevice?.id != device.id) {
+        throw Exception('Device not connected. Please connect first.');
+      }
+
+      if (kDebugMode) {
+        print("🔍 Discovering services for ${device.name}...");
+      }
+
       _services = await _repository.discoverServices(device);
+
+      if (kDebugMode) {
+        print("✅ Found ${_services.length} services");
+      }
+
       notifyListeners();
     } catch (e) {
       if (kDebugMode) {
-        print("Error discovering services: $e");
+        print("❌ Error discovering services: $e");
       }
+      rethrow;
     }
   }
 
   Future<List<int>> readCharacteristic(BleCharacteristic characteristic) async {
     try {
       final value = await _repository.readCharacteristic(characteristic);
-      // Update the characteristic value in our local model if needed
-      // For now, just return the value
+      // Update the characteristic value in the UI
+      _updateCharacteristicValue(characteristic, value);
       return value;
     } catch (e) {
       if (kDebugMode) {
@@ -116,6 +135,39 @@ class BleViewModel extends ChangeNotifier {
 
   Stream<List<int>> subscribeToCharacteristic(BleCharacteristic characteristic) {
     return _repository.subscribeToCharacteristic(characteristic);
+  }
+
+  /// Updates a characteristic value in the services list from a notification
+  void updateCharacteristicValue(BleCharacteristic characteristic, List<int> newValue) {
+    _updateCharacteristicValue(characteristic, newValue);
+  }
+
+  /// Updates a characteristic value in the services list and notifies listeners
+  void _updateCharacteristicValue(BleCharacteristic characteristic, List<int> newValue) {
+    // Find the service and characteristic in our list and update it
+    for (int i = 0; i < _services.length; i++) {
+      final service = _services[i];
+      final charIndex = service.characteristics.indexWhere(
+        (c) => c.uuid == characteristic.uuid && c.serviceUuid == characteristic.serviceUuid,
+      );
+
+      if (charIndex != -1) {
+        // Update the characteristic with the new value
+        final updatedChar = service.characteristics[charIndex].copyWith(value: newValue);
+        final updatedChars = List<BleCharacteristic>.from(service.characteristics);
+        updatedChars[charIndex] = updatedChar;
+
+        _services[i] = BleService(
+          uuid: service.uuid,
+          deviceId: service.deviceId,
+          characteristics: updatedChars,
+          nativeService: service.nativeService,
+        );
+
+        notifyListeners();
+        break;
+      }
+    }
   }
 
   @override

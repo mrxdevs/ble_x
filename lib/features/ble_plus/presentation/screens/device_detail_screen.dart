@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../domain/models/ble_device.dart';
-import '../../domain/models/ble_service.dart';
 import '../../domain/models/ble_characteristic.dart';
 import '../../../../core/utils/ble_plus/ble_utils.dart';
+import '../../../../core/utils/ble_plus/uuid_helper.dart';
 import '../viewmodels/ble_viewmodel.dart';
 
 class DeviceDetailScreen extends StatelessWidget {
@@ -27,8 +27,29 @@ class DeviceDetailScreen extends StatelessWidget {
             const SizedBox(height: 24),
             if (isConnected) ...[
               ElevatedButton(
-                onPressed: () {
-                  viewModel.discoverServices(device);
+                onPressed: () async {
+                  try {
+                    await viewModel.discoverServices(device);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Found ${viewModel.services.length} services'),
+                          backgroundColor: Colors.green,
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Error: ${e.toString()}'),
+                          backgroundColor: Colors.red,
+                          duration: const Duration(seconds: 3),
+                        ),
+                      );
+                    }
+                  }
                 },
                 child: const Text('Discover Services'),
               ),
@@ -47,19 +68,47 @@ class DeviceDetailScreen extends StatelessWidget {
                   itemCount: viewModel.services.length,
                   itemBuilder: (context, index) {
                     final service = viewModel.services[index];
+                    final serviceName = UuidHelper.getDisplayName(service.uuid);
+                    final hasKnownName = UuidHelper.hasKnownName(service.uuid);
+
                     return ExpansionTile(
                       title: Text(
-                        'Service: 0x${service..toString().toUpperCase().substring(4, 8)}',
+                        hasKnownName ? serviceName : 'Service: $serviceName',
+                        style: TextStyle(
+                          fontWeight: hasKnownName ? FontWeight.bold : FontWeight.normal,
+                        ),
                       ),
-                      subtitle: Text(service.uuid.toString()),
+                      subtitle: Text(
+                        service.uuid,
+                        style: TextStyle(fontSize: 11, color: Colors.grey),
+                      ),
                       children: service.characteristics.map((c) {
+                        final charName = UuidHelper.getDisplayName(c.uuid);
+                        final isKnownChar = UuidHelper.hasKnownName(c.uuid);
+
                         return ListTile(
-                          title: Text('Char: ${c.uuid}'),
+                          title: Text(
+                            isKnownChar ? charName : 'Char: $charName',
+                            style: TextStyle(
+                              fontWeight: isKnownChar ? FontWeight.w600 : FontWeight.normal,
+                            ),
+                          ),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              if (!isKnownChar)
+                                Text(
+                                  'UUID: ${c.uuid}',
+                                  style: TextStyle(fontSize: 10, color: Colors.grey),
+                                ),
                               Text('Props: ${_getPropertiesString(c)}'),
-                              if (c.value.isNotEmpty) Text('Value: ${c.value}'),
+                              Text('Value: ${c.valueAsString}'),
+                              if (c.value.isNotEmpty) ...[
+                                Text(
+                                  'Hex: ${c.valueAsHex}',
+                                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                                ),
+                              ],
                             ],
                           ),
                           trailing: Row(
@@ -83,9 +132,17 @@ class DeviceDetailScreen extends StatelessWidget {
                                   icon: const Icon(Icons.notifications),
                                   onPressed: () {
                                     viewModel.subscribeToCharacteristic(c).listen((value) {
-                                      // Update UI or show snackbar
+                                      // Update the characteristic value in the ViewModel
+                                      viewModel.updateCharacteristicValue(c, value);
+
+                                      // Decode the notification value for display
+                                      final decodedValue = c.copyWith(value: value).valueAsString;
                                       ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Notification: $value')),
+                                        SnackBar(
+                                          content: Text('Notification: $decodedValue'),
+                                          backgroundColor: Colors.blue,
+                                          duration: const Duration(seconds: 1),
+                                        ),
                                       );
                                     });
                                   },

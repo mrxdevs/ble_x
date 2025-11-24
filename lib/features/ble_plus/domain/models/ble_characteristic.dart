@@ -1,3 +1,5 @@
+import '../../../../core/utils/ble_plus/ble_data_decoder.dart';
+
 class BleCharacteristic {
   final String uuid;
   final String serviceUuid;
@@ -18,6 +20,15 @@ class BleCharacteristic {
     required this.value,
     this.nativeCharacteristic,
   });
+
+  /// Returns the value decoded as a string (UTF-8 if valid, otherwise hex)
+  String get valueAsString => BleDataDecoder.decode(value);
+
+  /// Returns the value as a hex string
+  String get valueAsHex => BleDataDecoder.toHexString(value);
+
+  /// Returns the value as UTF-8 string, or null if not valid UTF-8
+  String? get valueAsUtf8 => BleDataDecoder.tryDecodeUtf8(value);
 
   BleCharacteristic copyWith({List<int>? value}) {
     return BleCharacteristic(

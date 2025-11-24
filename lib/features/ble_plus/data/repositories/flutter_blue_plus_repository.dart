@@ -85,7 +85,18 @@ class FlutterBluePlusRepository implements BleRepository {
   @override
   Future<void> connect(BleDevice device) async {
     final nativeDevice = device.nativeDevice as BluetoothDevice;
-    await nativeDevice.connect();
+
+    // Connect and wait for connection state
+    await nativeDevice.connect(timeout: const Duration(seconds: 15));
+
+    // Wait a bit for connection to stabilize
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    // Verify we're actually connected
+    final connectionState = await nativeDevice.connectionState.first;
+    if (connectionState != BluetoothConnectionState.connected) {
+      throw Exception('Failed to establish connection');
+    }
   }
 
   @override
