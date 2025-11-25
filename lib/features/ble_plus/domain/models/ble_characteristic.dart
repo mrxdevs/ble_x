@@ -1,3 +1,5 @@
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+
 import '../../../../core/utils/ble_plus/ble_data_decoder.dart';
 
 class BleCharacteristic {
@@ -9,6 +11,7 @@ class BleCharacteristic {
   final bool isNotifiable;
   final List<int> value;
   final Object? nativeCharacteristic;
+  final BluetoothCharacteristic? bleCharacteristic;
 
   BleCharacteristic({
     required this.uuid,
@@ -19,6 +22,7 @@ class BleCharacteristic {
     required this.isNotifiable,
     required this.value,
     this.nativeCharacteristic,
+    this.bleCharacteristic,
   });
 
   /// Returns the value decoded as a string (UTF-8 if valid, otherwise hex)
@@ -40,6 +44,7 @@ class BleCharacteristic {
       isNotifiable: isNotifiable,
       value: value ?? this.value,
       nativeCharacteristic: nativeCharacteristic,
+      bleCharacteristic: bleCharacteristic,
     );
   }
 }

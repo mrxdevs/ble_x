@@ -102,7 +102,13 @@ class DeviceDetailScreen extends StatelessWidget {
                                   style: TextStyle(fontSize: 10, color: Colors.grey),
                                 ),
                               Text('Props: ${_getPropertiesString(c)}'),
-                              Text('Value: ${c.valueAsString}'),
+                              FutureBuilder(
+                                future: c.bleCharacteristic?.read(),
+                                builder: (context, asyncSnapshot) {
+                                  return Text('Value: ${asyncSnapshot.data} ${c.value} ');
+                                },
+                              ),
+
                               if (c.value.isNotEmpty) ...[
                                 Text(
                                   'Hex: ${c.valueAsHex}',

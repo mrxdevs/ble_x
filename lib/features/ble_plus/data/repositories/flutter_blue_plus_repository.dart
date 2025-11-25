@@ -123,6 +123,7 @@ class FlutterBluePlusRepository implements BleRepository {
             isNotifiable: c.properties.notify || c.properties.indicate,
             value: c.lastValue,
             nativeCharacteristic: c,
+            bleCharacteristic: c,
           );
         }).toList(),
         nativeService: s,
