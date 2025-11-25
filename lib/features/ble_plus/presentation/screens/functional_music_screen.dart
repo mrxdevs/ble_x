@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/ble_viewmodel.dart';
@@ -16,11 +18,14 @@ class _FunctionalMusicScreenState extends State<FunctionalMusicScreen>
   bool _isRepeat = false;
   double _volume = 0.7;
   double _progress = 0.3;
-  bool _isInfoExpanded = true;
+  bool _isInfoExpanded = false;
+  bool _isNext = false;
+  bool _isPrevious = false;
 
   late AnimationController _playPauseController;
   late AnimationController _rotationController;
 
+  // Device info
   String? _brandTag;
   String? _deviceModel;
   String? _serialNumber;
@@ -50,7 +55,10 @@ class _FunctionalMusicScreenState extends State<FunctionalMusicScreen>
 
   Future<void> _loadDeviceInfo() async {
     final viewModel = context.read<BleViewModel>();
-    if (viewModel.connectedDevice == null) return;
+    if (viewModel.connectedDevice == null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Device not connected')));
+      return;
+    }
 
     setState(() {
       _isLoadingDeviceInfo = true;
@@ -58,7 +66,7 @@ class _FunctionalMusicScreenState extends State<FunctionalMusicScreen>
 
     try {
       // Look for device information in characteristics
-      // You'll need to update these UUIDs based on your actual device
+
       for (var service in viewModel.services) {
         for (var char in service.characteristics) {
           if (char.isReadable) {
@@ -68,12 +76,33 @@ class _FunctionalMusicScreenState extends State<FunctionalMusicScreen>
 
               // Try to identify characteristics by UUID or name
               // Update these conditions based on your device's actual UUIDs
-              if (char.uuid.toLowerCase().contains('brand') || char.uuid.endsWith('0001')) {
+              if (char.uuid.endsWith('100001')) {
                 _brandTag = value;
-              } else if (char.uuid.toLowerCase().contains('model') || char.uuid.endsWith('0002')) {
+              } else if (char.uuid.endsWith('100002')) {
                 _deviceModel = value;
-              } else if (char.uuid.toLowerCase().contains('serial') || char.uuid.endsWith('0003')) {
+              } else if (char.uuid.endsWith('100003')) {
                 _serialNumber = value;
+              } else if (char.uuid.endsWith('300001')) {
+                _isPlaying = value == "01";
+                print("isPlaying: $value");
+              } else if (char.uuid.endsWith('300002')) {
+                _isNext = value == "01";
+                print("isNext: $value");
+              } else if (char.uuid.endsWith('300003')) {
+                _isPrevious = value == "01";
+                print("isPrevious: $value");
+              } else if (char.uuid.endsWith('300004')) {
+                _volume = double.parse(value) / 100;
+                print("volume: $value");
+                viewModel.subscribeToCharacteristic(char).listen((value) {
+                  // Update the characteristic value in the ViewModel
+                  viewModel.updateCharacteristicValue(char, value);
+                  print("volume on listen: ${utf8.decode(value)}");
+                  _volume = double.parse(utf8.decode(value)) / 100;
+
+                  // Decode the notification value for display
+                  final decodedValue = char.copyWith(value: value).valueAsString;
+                });
               }
             } catch (e) {
               // Ignore read errors for individual characteristics
