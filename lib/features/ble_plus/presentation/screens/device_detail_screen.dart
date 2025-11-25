@@ -102,16 +102,16 @@ class DeviceDetailScreen extends StatelessWidget {
                                   style: TextStyle(fontSize: 10, color: Colors.grey),
                                 ),
                               Text('Props: ${_getPropertiesString(c)}'),
-                              FutureBuilder(
-                                future: c.bleCharacteristic?.read(),
-                                builder: (context, asyncSnapshot) {
-                                  return Text('Value: ${asyncSnapshot.data} ${c.value} ');
-                                },
-                              ),
 
+                              // FutureBuilder(
+                              //   future: c.bleCharacteristic?.read(),
+                              //   builder: (context, asyncSnapshot) {
+                              //     return Text('Value: ${asyncSnapshot.data} ${c.value} ');
+                              //   },
+                              // ),
                               if (c.value.isNotEmpty) ...[
                                 Text(
-                                  'Hex: ${c.valueAsHex}',
+                                  'Hex: ${c.valueAsString}',
                                   style: TextStyle(fontSize: 12, color: Colors.grey),
                                 ),
                               ],
@@ -143,13 +143,13 @@ class DeviceDetailScreen extends StatelessWidget {
 
                                       // Decode the notification value for display
                                       final decodedValue = c.copyWith(value: value).valueAsString;
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text('Notification: $decodedValue'),
-                                          backgroundColor: Colors.blue,
-                                          duration: const Duration(seconds: 1),
-                                        ),
-                                      );
+                                      // ScaffoldMessenger.of(context).showSnackBar(
+                                      //   SnackBar(
+                                      //     content: Text('Notification: $decodedValue'),
+                                      //     backgroundColor: Colors.blue,
+                                      //     duration: const Duration(seconds: 1),
+                                      //   ),
+                                      // );
                                     });
                                   },
                                 ),
