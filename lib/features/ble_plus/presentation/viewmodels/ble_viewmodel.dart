@@ -170,6 +170,17 @@ class BleViewModel extends ChangeNotifier {
     }
   }
 
+  //Validator brand and model
+  bool validateDeviceName() {
+    final isBrandServiceUuid = "5261a470-7465-4e48-b56f-726170100000";
+    final hasBrandService = _services.any((service) => service.uuid == isBrandServiceUuid);
+
+    if (hasBrandService) {
+      return true;
+    }
+    return false;
+  }
+
   @override
   void dispose() {
     _scanSubscription?.cancel();

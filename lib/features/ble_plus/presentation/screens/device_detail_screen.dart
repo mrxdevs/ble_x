@@ -30,6 +30,7 @@ class DeviceDetailScreen extends StatelessWidget {
                 onPressed: () async {
                   try {
                     await viewModel.discoverServices(device);
+                    await viewModel.validateDeviceName();
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -53,6 +54,7 @@ class DeviceDetailScreen extends StatelessWidget {
                 },
                 child: const Text('Discover Services'),
               ),
+              ElevatedButton(onPressed: () async {}, child: const Text('Functionality Test')),
               const SizedBox(height: 16),
               const Text(
                 'Services & Characteristics',
