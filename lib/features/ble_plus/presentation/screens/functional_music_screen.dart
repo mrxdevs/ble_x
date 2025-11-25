@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -85,6 +86,25 @@ class _FunctionalMusicScreenState extends State<FunctionalMusicScreen>
               } else if (char.uuid.endsWith('300001')) {
                 _isPlaying = value == "01";
                 print("isPlaying: $value");
+                viewModel.subscribeToCharacteristic(char).listen((value) {
+                  viewModel.updateCharacteristicValue(char, value);
+
+                  final int byte = (value.isNotEmpty) ? value.first : 0;
+                  final bool isPlayingNow = byte == 1;
+
+                  debugPrint('isPlaying on listen validation-->: $isPlayingNow');
+                  _togglePlayPause();
+
+                  // if (isPlayingNow) {
+                  //   if (!mounted) return;
+                  //   setState(() => _isPlaying = true);
+                  // } else {
+                  //   if (!mounted) return;
+                  //   setState(() => _isPlaying = false);
+                  // }
+
+                  debugPrint('isPlaying on listen-->: $value');
+                });
               } else if (char.uuid.endsWith('300002')) {
                 _isNext = value == "01";
                 print("isNext: $value");
@@ -97,11 +117,7 @@ class _FunctionalMusicScreenState extends State<FunctionalMusicScreen>
                 viewModel.subscribeToCharacteristic(char).listen((value) {
                   // Update the characteristic value in the ViewModel
                   viewModel.updateCharacteristicValue(char, value);
-                  print("volume on listen: ${utf8.decode(value)}");
                   _volume = double.parse(utf8.decode(value)) / 100;
-
-                  // Decode the notification value for display
-                  final decodedValue = char.copyWith(value: value).valueAsString;
                 });
               }
             } catch (e) {
@@ -113,13 +129,16 @@ class _FunctionalMusicScreenState extends State<FunctionalMusicScreen>
     } catch (e) {
       // Handle error silently
     } finally {
-      setState(() {
-        _isLoadingDeviceInfo = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoadingDeviceInfo = false;
+        });
+      }
     }
   }
 
   void _togglePlayPause() {
+    if (!mounted) return;
     setState(() {
       _isPlaying = !_isPlaying;
       if (_isPlaying) {
