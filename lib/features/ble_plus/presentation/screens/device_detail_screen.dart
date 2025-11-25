@@ -1,3 +1,4 @@
+import 'package:ble_x/features/ble_plus/presentation/screens/functional_music_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../domain/models/ble_device.dart';
@@ -54,7 +55,15 @@ class DeviceDetailScreen extends StatelessWidget {
                 },
                 child: const Text('Discover Services'),
               ),
-              ElevatedButton(onPressed: () async {}, child: const Text('Functionality Test')),
+              ElevatedButton(
+                onPressed: () async {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const FunctionalMusicScreen()),
+                  );
+                },
+                child: const Text('Functionality Test'),
+              ),
               const SizedBox(height: 16),
               const Text(
                 'Services & Characteristics',
