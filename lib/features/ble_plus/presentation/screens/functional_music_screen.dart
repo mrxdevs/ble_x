@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:volume_controller/volume_controller.dart';
 import '../viewmodels/ble_viewmodel.dart';
 
 class FunctionalMusicScreen extends StatefulWidget {
@@ -118,6 +119,7 @@ class _FunctionalMusicScreenState extends State<FunctionalMusicScreen>
                   // Update the characteristic value in the ViewModel
                   viewModel.updateCharacteristicValue(char, value);
                   _volume = double.parse(utf8.decode(value)) / 100;
+                  VolumeController.instance.setVolume(_volume);
                 });
               }
             } catch (e) {

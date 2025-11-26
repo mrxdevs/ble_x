@@ -41,6 +41,8 @@ dependencies:
   animate_do: ^4.2.0
   flutter_ble_peripheral: ^2.0.0
 
+  volume_controller: ^3.4.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
