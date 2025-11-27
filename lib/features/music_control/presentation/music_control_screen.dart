@@ -25,6 +25,7 @@ class _MusicControlScreenState extends State<MusicControlScreen> with TickerProv
   @override
   void initState() {
     super.initState();
+    _listenVolume();
     _playPauseController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -36,6 +37,7 @@ class _MusicControlScreenState extends State<MusicControlScreen> with TickerProv
   void dispose() {
     _playPauseController.dispose();
     _rotationController.dispose();
+    SystemMediaController.dispose();
     super.dispose();
   }
 
@@ -59,6 +61,14 @@ class _MusicControlScreenState extends State<MusicControlScreen> with TickerProv
 
   _previous() async {
     await SystemMediaController.previous();
+  }
+
+  _listenVolume() {
+    SystemMediaController.getVolumeController((volume) {
+      setState(() {
+        _volume = volume;
+      });
+    });
   }
 
   @override
@@ -111,8 +121,7 @@ class _MusicControlScreenState extends State<MusicControlScreen> with TickerProv
               ),
 
               // Device Info Bar
-              _buildDeviceInfoBar(isConnected),
-
+              // _buildDeviceInfoBar(isConnected),
               const SizedBox(height: 24),
 
               // Main Content
@@ -484,7 +493,13 @@ class _MusicControlScreenState extends State<MusicControlScreen> with TickerProv
                 thumbColor: HSLColor.fromAHSL(1.0, 280, 0.7, 0.6).toColor(),
                 overlayColor: HSLColor.fromAHSL(0.3, 280, 0.7, 0.6).toColor(),
               ),
-              child: Slider(value: _volume, onChanged: (value) => setState(() => _volume = value)),
+              child: Slider(
+                value: _volume,
+                onChanged: (value) => setState(() {
+                  SystemMediaController.setVolume(value);
+                  _volume = value;
+                }),
+              ),
             ),
           ),
           const SizedBox(width: 16),
