@@ -1,3 +1,5 @@
+import 'package:ble_x/features/music_control/presentation/music_control_screen.dart';
+import 'package:ble_x/features/phone_control.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -43,7 +45,12 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
-  static const List<Widget> _widgetOptions = <Widget>[ScanScreen(), PeripheralScreen()];
+  static const List<Widget> _widgetOptions = <Widget>[
+    ScanScreen(),
+    PeripheralScreen(),
+    MusicControlScreen(),
+    PhoneConrolScreen(),
+  ];
 
   void _onItemTapped(int index) {
     setState(() {
@@ -61,6 +68,8 @@ class _HomeScreenState extends State<HomeScreen> {
         destinations: const <NavigationDestination>[
           NavigationDestination(icon: Icon(Icons.radar), label: 'Scanner'),
           NavigationDestination(icon: Icon(Icons.broadcast_on_personal), label: 'Peripheral'),
+          NavigationDestination(icon: Icon(Icons.music_note), label: 'Music'),
+          NavigationDestination(icon: Icon(Icons.call), label: 'Call'),
         ],
       ),
     );
