@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:ble_x/features/music_control/presentation/system_music_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:ble_x/features/music_control/presentation/music_controller_imp.dart';
 
@@ -18,14 +19,38 @@ class _MusicControlScreenState extends State<MusicControlScreen> with TickerProv
   double _progress = 0.3;
   bool _isInfoExpanded = false;
 
+  MediaInfo _info = MediaInfo();
+  Timer? _timer;
+
   late AnimationController _playPauseController;
   late AnimationController _rotationController;
-  final SystemMediaController _systemController = SystemMediaController();
 
   @override
   void initState() {
     super.initState();
     _listenVolume();
+    print("initState: Music player ");
+    SystemMediaController2.init();
+    // Listen for updates from Android
+    SystemMediaController2.mediaStream.listen((info) {
+      print("Received media info: $info");
+      setState(() {
+        _info = info;
+      });
+    });
+
+    // Local Timer to simulate smooth progress bar movement
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      if (_info.isPlaying) {
+        setState(() {
+          // Increment position by 1 second (1000ms)
+          if (_info.currentPosition < _info.duration) {
+            _info.currentPosition += 1000;
+          }
+        });
+      }
+    });
+
     _playPauseController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -38,11 +63,18 @@ class _MusicControlScreenState extends State<MusicControlScreen> with TickerProv
     _playPauseController.dispose();
     _rotationController.dispose();
     SystemMediaController.dispose();
+    _timer?.cancel();
     super.dispose();
   }
 
+  String formatTime(int ms) {
+    int seconds = (ms / 1000).truncate();
+    int minutes = (seconds / 60).truncate();
+    return "$minutes:${(seconds % 60).toString().padLeft(2, '0')}";
+  }
+
   void _togglePlayPause() async {
-    await SystemMediaController.playPause();
+    await SystemMediaController2.playPause();
     setState(() {
       _isPlaying = !_isPlaying;
       if (_isPlaying) {
@@ -276,14 +308,14 @@ class _MusicControlScreenState extends State<MusicControlScreen> with TickerProv
             const SizedBox(height: 40),
 
             // Song Info
-            const Text(
-              'Current Song Title',
+            Text(
+              _info.title,
               style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
-              'Artist Name',
+              _info.artist,
               style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 16),
             ),
 
@@ -333,9 +365,14 @@ class _MusicControlScreenState extends State<MusicControlScreen> with TickerProv
               spreadRadius: 5,
             ),
           ],
+          image: _info.artwork != null
+              ? DecorationImage(image: MemoryImage(_info.artwork!), fit: BoxFit.cover)
+              : null,
         ),
         child: Center(
-          child: Icon(Icons.music_note, size: 100, color: Colors.white.withOpacity(0.8)),
+          child: _info.artwork == null
+              ? Icon(Icons.music_note, size: 80, color: Colors.white)
+              : null,
         ),
       ),
     );
@@ -354,7 +391,13 @@ class _MusicControlScreenState extends State<MusicControlScreen> with TickerProv
             thumbColor: Colors.white,
             overlayColor: Colors.white.withOpacity(0.3),
           ),
-          child: Slider(value: _progress, onChanged: (value) => setState(() => _progress = value)),
+          child: Slider(
+            value: (_info.currentPosition / (_info.duration == 0 ? 1 : _info.duration)).clamp(
+              0.0,
+              1.0,
+            ),
+            onChanged: (value) => setState(() => _progress = value),
+          ),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8.0),
