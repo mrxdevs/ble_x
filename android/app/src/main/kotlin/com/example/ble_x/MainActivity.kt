@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioManager
 import android.os.Build
+import android.util.Log
 import android.view.KeyEvent
 import androidx.annotation.NonNull
 import io.flutter.embedding.android.FlutterActivity
@@ -52,46 +53,73 @@ class MainActivity: FlutterActivity() {
 }
 
 class MediaStreamHandler(private val context: Context) : EventChannel.StreamHandler {
+    private val TAG = "MediaStreamHandler"
     private var eventSink: EventChannel.EventSink? = null
     
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
+            Log.d(TAG, "Broadcast received!")
+            
             val type = intent.getStringExtra("type")
+            Log.d(TAG, "Received type: $type")
+            
             val data = HashMap<String, Any?>()
             
             data["type"] = type
             if (type == "metadata") {
-                data["title"] = intent.getStringExtra("title")
-                data["artist"] = intent.getStringExtra("artist")
-                data["duration"] = intent.getLongExtra("duration", 0L)
-                data["artwork"] = intent.getByteArrayExtra("artwork")
+                val title = intent.getStringExtra("title")
+                val artist = intent.getStringExtra("artist")
+                val duration = intent.getLongExtra("duration", 0L)
+                val artwork = intent.getByteArrayExtra("artwork")
+                
+                data["title"] = title
+                data["artist"] = artist
+                data["duration"] = duration
+                data["artwork"] = artwork
+                
+                Log.d(TAG, "Metadata - Title: $title, Artist: $artist, Duration: $duration, Has artwork: ${artwork != null}")
             } else if (type == "state") {
-                data["isPlaying"] = intent.getBooleanExtra("isPlaying", false)
-                data["position"] = intent.getLongExtra("position", 0L)
-                data["speed"] = intent.getFloatExtra("speed", 1.0f)
+                val isPlaying = intent.getBooleanExtra("isPlaying", false)
+                val position = intent.getLongExtra("position", 0L)
+                val speed = intent.getFloatExtra("speed", 1.0f)
+                
+                data["isPlaying"] = isPlaying
+                data["position"] = position
+                data["speed"] = speed
+                
+                Log.d(TAG, "State - Playing: $isPlaying, Position: $position, Speed: $speed")
             }
+            
             eventSink?.success(data)
+            Log.d(TAG, "Data sent to Flutter via eventSink")
         }
     }
 
     override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+        Log.d(TAG, "onListen: Setting up event channel stream")
         eventSink = events
+        
         // Register receiver with appropriate flags for modern Android
         val filter = IntentFilter("com.example.ble_x.MEDIA_INFO")
         
         // Android 13+ (Tiramisu, API 33) requires explicit receiver export flags
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             context.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
+            Log.d(TAG, "Receiver registered with RECEIVER_NOT_EXPORTED flag")
         } else {
             context.registerReceiver(receiver, filter)
+            Log.d(TAG, "Receiver registered (legacy mode)")
         }
     }
 
     override fun onCancel(arguments: Any?) {
+        Log.d(TAG, "onCancel: Cleaning up event channel stream")
+        
         try {
             context.unregisterReceiver(receiver)
+            Log.d(TAG, "Receiver unregistered successfully")
         } catch (e: Exception) {
-            // Receiver might not be registered
+            Log.e(TAG, "Error unregistering receiver", e)
         }
         eventSink = null
     }

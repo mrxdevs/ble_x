@@ -1,0 +1,42 @@
+PODS:
+  - flutter_ble_peripheral (1.3.0):
+    - Flutter
+    - FlutterMacOS
+  - flutter_blue_plus (0.0.1):
+    - FlutterMacOS
+  - FlutterMacOS (1.0.0)
+  - path_provider_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - volume_controller (0.0.1):
+    - FlutterMacOS
+
+DEPENDENCIES:
+  - flutter_ble_peripheral (from `Flutter/ephemeral/.symlinks/plugins/flutter_ble_peripheral/darwin`)
+  - flutter_blue_plus (from `Flutter/ephemeral/.symlinks/plugins/flutter_blue_plus/macos`)
+  - FlutterMacOS (from `Flutter/ephemeral`)
+  - path_provider_foundation (from `Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin`)
+  - volume_controller (from `Flutter/ephemeral/.symlinks/plugins/volume_controller/macos`)
+
+EXTERNAL SOURCES:
+  flutter_ble_peripheral:
+    :path: Flutter/ephemeral/.symlinks/plugins/flutter_ble_peripheral/darwin
+  flutter_blue_plus:
+    :path: Flutter/ephemeral/.symlinks/plugins/flutter_blue_plus/macos
+  FlutterMacOS:
+    :path: Flutter/ephemeral
+  path_provider_foundation:
+    :path: Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin
+  volume_controller:
+    :path: Flutter/ephemeral/.symlinks/plugins/volume_controller/macos
+
+SPEC CHECKSUMS:
+  flutter_ble_peripheral: a24a4a800ac159843cf206b2a4b75c9e015478ed
+  flutter_blue_plus: dfaef8c6b52955205b65e6ea88659c68570dd563
+  FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
+  path_provider_foundation: bb55f6dbba17d0dccd6737fe6f7f34fbd0376880
+  volume_controller: 5c068e6d085c80dadd33fc2c918d2114b775b3dd
+
+PODFILE CHECKSUM: 54d867c82ac51cbd61b565781b9fada492027009
+
+COCOAPODS: 1.16.2

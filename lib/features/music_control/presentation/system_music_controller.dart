@@ -34,23 +34,53 @@ class SystemMediaController2 {
   static MediaInfo _cache = MediaInfo();
 
   static void init() {
-    _stream.receiveBroadcastStream().listen((event) {
-      final data = Map<String, dynamic>.from(event);
+    print("SystemMediaController2.init() called - Setting up stream listener");
 
-      print("Received media info: $data");
+    _stream.receiveBroadcastStream().listen(
+      (event) {
+        print("=== RAW EVENT RECEIVED ===");
+        print("Event type: ${event.runtimeType}");
+        print("Event data: $event");
 
-      if (data['type'] == 'metadata') {
-        _cache.title = data['title'] ?? "Unknown";
-        _cache.artist = data['artist'] ?? "Unknown";
-        _cache.duration = data['duration'] ?? 1;
-        _cache.artwork = data['artwork']; // Uint8List
-      } else if (data['type'] == 'state') {
-        _cache.isPlaying = data['isPlaying'] ?? false;
-        _cache.currentPosition = data['position'] ?? 0;
-        _cache.playbackSpeed = (data['speed'] ?? 1.0).toDouble();
-      }
-      _controller.add(_cache);
-    });
+        try {
+          final data = Map<String, dynamic>.from(event);
+          print("Received media info: $data");
+
+          if (data['type'] == 'metadata') {
+            print("Processing metadata type");
+            _cache.title = data['title'] ?? "Unknown";
+            _cache.artist = data['artist'] ?? "Unknown";
+            _cache.duration = data['duration'] ?? 1;
+            _cache.artwork = data['artwork']; // Uint8List
+            print("Metadata updated: ${_cache.title} - ${_cache.artist}");
+          } else if (data['type'] == 'state') {
+            print("Processing state type");
+            _cache.isPlaying = data['isPlaying'] ?? false;
+            _cache.currentPosition = data['position'] ?? 0;
+            _cache.playbackSpeed = (data['speed'] ?? 1.0).toDouble();
+            print(
+              "State updated: isPlaying=${_cache.isPlaying}, position=${_cache.currentPosition}",
+            );
+          } else {
+            print("Unknown type: ${data['type']}");
+          }
+
+          _controller.add(_cache);
+          print("Data added to stream controller");
+        } catch (e, stackTrace) {
+          print("ERROR parsing event data: $e");
+          print("Stack trace: $stackTrace");
+        }
+      },
+      onError: (error) {
+        print("ERROR in EventChannel stream: $error");
+      },
+      onDone: () {
+        print("EventChannel stream closed");
+      },
+    );
+
+    print("Stream listener setup complete");
   }
 
   // Commands
