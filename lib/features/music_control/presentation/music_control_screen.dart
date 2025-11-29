@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:ble_x/features/music_control/presentation/now_playing_screen.dart';
 import 'package:ble_x/features/music_control/presentation/system_music_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:ble_x/features/music_control/presentation/music_controller_imp.dart';
@@ -146,7 +147,12 @@ class _MusicControlScreenState extends State<MusicControlScreen> with TickerProv
                     ),
                     IconButton(
                       icon: const Icon(Icons.more_vert, color: Colors.white),
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const NowPlayingScreen()),
+                        );
+                      },
                     ),
                   ],
                 ),

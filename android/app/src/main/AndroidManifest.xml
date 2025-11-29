@@ -64,4 +64,10 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+
+      <queries>
+        <package android:name="com.example.store" />
+        <package android:name="com.example.services" />
+    </queries>
 </manifest>
