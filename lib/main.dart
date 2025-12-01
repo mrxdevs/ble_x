@@ -1,8 +1,9 @@
 import 'package:ble_x/features/music_control/presentation/music_control_screen.dart';
 import 'package:ble_x/features/phone_control.dart';
 import 'package:flutter/material.dart';
+import 'package:nowplaying/nowplaying.dart';
 import 'package:provider/provider.dart';
-import 'package:permission_handler/permission_handler.dart';
+
 import 'package:ble_x/features/peripheral/screens/peripheral_screen.dart';
 import 'package:ble_x/features/peripheral/viewmodels/peripheral_viewmodel.dart';
 import 'core/theme/app_theme.dart';
@@ -12,6 +13,7 @@ import 'features/ble_plus/presentation/viewmodels/ble_viewmodel.dart';
 
 void main() {
   runApp(const MyApp());
+  NowPlaying.instance.start();
 }
 
 class MyApp extends StatelessWidget {
