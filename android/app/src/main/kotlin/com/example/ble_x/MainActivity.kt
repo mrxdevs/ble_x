@@ -58,10 +58,10 @@ class MediaStreamHandler(private val context: Context) : EventChannel.StreamHand
     
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            Log.d(TAG, "Broadcast received!")
+            Log.d(TAG, "MainActivity Broadcast received!")
             
             val type = intent.getStringExtra("type")
-            Log.d(TAG, "Received type: $type")
+            Log.d(TAG, "MainActivity Received type: $type")
             
             val data = HashMap<String, Any?>()
             
@@ -77,7 +77,7 @@ class MediaStreamHandler(private val context: Context) : EventChannel.StreamHand
                 data["duration"] = duration
                 data["artwork"] = artwork
                 
-                Log.d(TAG, "Metadata - Title: $title, Artist: $artist, Duration: $duration, Has artwork: ${artwork != null}")
+                Log.d(TAG, "MainActivity Metadata - Title: $title, Artist: $artist, Duration: $duration, Has artwork: ${artwork != null}")
             } else if (type == "state") {
                 val isPlaying = intent.getBooleanExtra("isPlaying", false)
                 val position = intent.getLongExtra("position", 0L)
@@ -87,16 +87,16 @@ class MediaStreamHandler(private val context: Context) : EventChannel.StreamHand
                 data["position"] = position
                 data["speed"] = speed
                 
-                Log.d(TAG, "State - Playing: $isPlaying, Position: $position, Speed: $speed")
+                Log.d(TAG, "MainActivity State - Playing: $isPlaying, Position: $position, Speed: $speed")
             }
             
             eventSink?.success(data)
-            Log.d(TAG, "Data sent to Flutter via eventSink")
+            Log.d(TAG, "MainActivity Data sent to Flutter via eventSink")
         }
     }
 
     override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
-        Log.d(TAG, "onListen: Setting up event channel stream")
+        Log.d(TAG, "MainActivity onListen: Setting up event channel stream")
         eventSink = events
         
         // Register receiver with appropriate flags for modern Android
@@ -105,19 +105,19 @@ class MediaStreamHandler(private val context: Context) : EventChannel.StreamHand
         // Android 13+ (Tiramisu, API 33) requires explicit receiver export flags
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             context.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
-            Log.d(TAG, "Receiver registered with RECEIVER_NOT_EXPORTED flag")
+            Log.d(TAG, "MainActivity Receiver registered with RECEIVER_NOT_EXPORTED flag")
         } else {
             context.registerReceiver(receiver, filter)
-            Log.d(TAG, "Receiver registered (legacy mode)")
+            Log.d(TAG, "MainActivity Receiver registered (legacy mode)")
         }
     }
 
     override fun onCancel(arguments: Any?) {
-        Log.d(TAG, "onCancel: Cleaning up event channel stream")
+        Log.d(TAG, "MainActivity onCancel: Cleaning up event channel stream")
         
         try {
             context.unregisterReceiver(receiver)
-            Log.d(TAG, "Receiver unregistered successfully")
+            Log.d(TAG, "MainActivity Receiver unregistered successfully")
         } catch (e: Exception) {
             Log.e(TAG, "Error unregistering receiver", e)
         }

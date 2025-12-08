@@ -1,5 +1,5 @@
 import 'package:ble_x/features/music_control/presentation/music_control_screen.dart';
-import 'package:ble_x/features/phone_control.dart';
+import 'package:ble_x/core/phone_call/phone_control.dart';
 import 'package:flutter/material.dart';
 import 'package:nowplaying/nowplaying.dart';
 import 'package:provider/provider.dart';
