@@ -166,12 +166,21 @@ class _DeviceDetailsPageState extends State<DeviceDetailsPage> {
 
           // --- PROPERTIES ROW ---
           Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildInfoRow(
-                "Descriptors",
-                characteristic.descriptors.map((d) => d.toString()).join(",\n "),
-              ),
               _buildInfoRow("Properties", characteristic.properties.toString()),
+
+              const SizedBox(height: 8),
+              const Text("Descriptors:", style: TextStyle(fontWeight: FontWeight.w600)),
+
+              if (characteristic.descriptors.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.only(left: 10.0, top: 4.0),
+                  child: Text("None", style: TextStyle(color: Colors.grey)),
+                )
+              else
+                // Map every descriptor to our new Widget
+                ...characteristic.descriptors.map((d) => _buildDescriptorTile(d)),
             ],
           ),
 
@@ -325,6 +334,80 @@ class _DeviceDetailsPageState extends State<DeviceDetailsPage> {
           ],
         );
       },
+    );
+  }
+
+  Widget _buildDescriptorTile(BluetoothDescriptor descriptor) {
+    return Container(
+      margin: const EdgeInsets.only(top: 8.0, left: 10.0),
+      padding: const EdgeInsets.all(8.0),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        border: Border.all(color: Colors.grey[400]!),
+        borderRadius: BorderRadius.circular(6.0),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Display the Descriptor UUID (2901 is the User Description)
+              Text(
+                "Descriptor: ${descriptor.uuid.str}",
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+              ),
+              // The READ Button for this specific descriptor
+              IconButton(
+                icon: const Icon(Icons.download, size: 20, color: Colors.blue),
+                tooltip: "Read Descriptor",
+                onPressed: () async {
+                  try {
+                    await descriptor.read();
+                    // The stream builder below will auto-update
+                  } catch (e) {
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text("Read Error: $e")));
+                  }
+                },
+              ),
+            ],
+          ),
+          // Listen to the Descriptor's value stream to update UI when read
+          StreamBuilder<List<int>>(
+            stream: descriptor.lastValueStream,
+            initialData: descriptor.lastValue,
+            builder: (context, snapshot) {
+              final data = snapshot.data ?? [];
+              String decoded = "";
+
+              // Try to decode as Text (useful for 0x2901 User Description)
+              try {
+                decoded = utf8.decode(data);
+              } catch (e) {
+                decoded = "(Not text)";
+              }
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Hex: $data", style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+                  if (data.isNotEmpty)
+                    Text(
+                      "String: $decoded",
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.purple,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 
