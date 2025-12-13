@@ -1,4 +1,5 @@
 import 'package:ble_x/features/ble_keyboard/data/ble_hid_service.dart';
+import 'package:ble_x/features/ble_keyboard/presentation/ble_device_details_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
@@ -35,6 +36,12 @@ class _BleAsKeyboardScreenState extends State<BleAsKeyboardScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scan();
     });
+  }
+
+  @override
+  void dispose() {
+    // _bleHidService.stopScan();
+    super.dispose();
   }
 
   @override
@@ -77,10 +84,22 @@ class _BleAsKeyboardScreenState extends State<BleAsKeyboardScreen> {
                     // Implement connection logic here
                     // For example: await device.connect();
                     // Then update UI or navigate
+
+                    await device.connect(
+                      // timeout: const Duration(seconds: 5),
+                      // autoConnect: true,
+                      // mtu: 45,
+                    );
+                    setState(() {});
+
                     ScaffoldMessenger.of(
                       context,
                     ).showSnackBar(SnackBar(content: Text('Connecting to ${device.advName}...')));
                     await _bleHidService.discoverServices(device);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => DeviceDetailsPage(device: device)),
+                    );
                   },
                   child: Text(
                     device.isConnected ? 'CONNECTED' : 'CONNECT',
@@ -166,6 +185,31 @@ class _BleAsKeyboardScreenState extends State<BleAsKeyboardScreen> {
                             return _buildInfoRow('MTU', snapshot.data?.toString() ?? 'N/A');
                           },
                         ),
+                        SizedBox(height: 10),
+                        if (device.isConnected)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              ElevatedButton(
+                                onPressed: () async {
+                                  await device.disconnect();
+                                  setState(() {});
+                                },
+                                child: Text("Disconnect", style: TextStyle(color: Colors.red)),
+                              ),
+                              ElevatedButton(
+                                onPressed: () async {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => DeviceDetailsPage(device: device),
+                                    ),
+                                  );
+                                },
+                                child: Icon(Icons.arrow_forward_ios),
+                              ),
+                            ],
+                          ),
                       ],
                     ),
                   ),
