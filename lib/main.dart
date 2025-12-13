@@ -1,3 +1,4 @@
+import 'package:ble_x/features/ble_keyboard/presentation/ble_as_keyboard_screen.dart';
 import 'package:ble_x/features/music_control/presentation/music_control_screen.dart';
 import 'package:ble_x/core/phone_call/phone_control.dart';
 import 'package:flutter/material.dart';
@@ -51,7 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ScanScreen(),
     PeripheralScreen(),
     MusicControlScreen(),
-    PhoneConrolScreen(),
+    BleAsKeyboardScreen(),
   ];
 
   void _onItemTapped(int index) {
@@ -71,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
           NavigationDestination(icon: Icon(Icons.radar), label: 'Scanner'),
           NavigationDestination(icon: Icon(Icons.broadcast_on_personal), label: 'Peripheral'),
           NavigationDestination(icon: Icon(Icons.music_note), label: 'Music'),
-          NavigationDestination(icon: Icon(Icons.call), label: 'Call'),
+          NavigationDestination(icon: Icon(Icons.keyboard), label: 'HID'),
         ],
       ),
     );
