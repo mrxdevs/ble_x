@@ -5,29 +5,30 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 class BleHidService {
   // 1. Scan for the Linux Keyboard
 
-  void scan() {
-    final subscription = FlutterBluePlus.startScan(
-      withServices: [Guid("1812")], // Filter for HID devices
+  Future<void> scan() async {
+    final subscription = await FlutterBluePlus.startScan(
+      // withServices: [Guid("2222")], // Filter for HID devices
       timeout: Duration(seconds: 4),
     );
   }
 
   // 2. Connect to the device found
 
-  StreamSubscription<List<ScanResult>> listenScannin() {
+  Future<StreamSubscription<List<ScanResult>>> listenScannin() async {
     return FlutterBluePlus.scanResults.listen((results) async {
+      print(results);
       for (ScanResult r in results) {
         if (r.device.platformName == "MyLinuxKeyboard") {
           // Name set in Linux script
           await r.device.connect();
-          discoverServices(r.device);
+          await discoverServices(r.device);
         }
       }
     });
   }
 
   // 3. Discover services
-  void discoverServices(BluetoothDevice device) async {
+  Future<void> discoverServices(BluetoothDevice device) async {
     List<BluetoothService> services = await device.discoverServices();
 
     for (var service in services) {
