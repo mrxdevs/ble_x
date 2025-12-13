@@ -164,6 +164,17 @@ class _DeviceDetailsPageState extends State<DeviceDetailsPage> {
 
           const SizedBox(height: 8),
 
+          // --- PROPERTIES ROW ---
+          Column(
+            children: [
+              _buildInfoRow(
+                "Descriptors",
+                characteristic.descriptors.map((d) => d.toString()).join(",\n "),
+              ),
+              _buildInfoRow("Properties", characteristic.properties.toString()),
+            ],
+          ),
+
           // --- ACTION BUTTONS ROW ---
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -332,7 +343,7 @@ class _DeviceDetailsPageState extends State<DeviceDetailsPage> {
               value,
               style: TextStyle(color: valueColor ?? Colors.blueGrey[900]),
               overflow: TextOverflow.ellipsis,
-              maxLines: 2,
+              maxLines: 50,
             ),
           ),
         ],
