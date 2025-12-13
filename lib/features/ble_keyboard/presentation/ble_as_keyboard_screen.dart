@@ -46,81 +46,157 @@ class _BleAsKeyboardScreenState extends State<BleAsKeyboardScreen> {
         child: Icon(Icons.search_outlined),
       ),
       body: Container(
+        color: Colors.blueGrey[50], // Light background for the list
         child: ListView.builder(
           itemCount: _scannedList.length,
           itemBuilder: (context, index) {
-            final device = _scannedList[index].device;
-            final advertisementData = _scannedList[index].advertisementData;
-            final rssi = _scannedList[index].rssi;
-            final timestamp = _scannedList[index].timeStamp;
+            final scanResult = _scannedList[index];
+            final device = scanResult.device;
+            final advertisementData = scanResult.advertisementData;
 
-            return Container(
-              decoration: BoxDecoration(
-                border: Border(bottom: BorderSide(color: Colors.grey)),
-              ),
-              child: ListTile(
-                leading: Icon(Icons.bluetooth),
-                title: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    /// Handling Device Data
-                    Text(
-                      device.advName.isEmpty ? device.platformName : device.advName,
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    //Time
-                    Text(timestamp.toString()),
-                    //Device Platform Name
-                    Text(device.platformName),
-                    Text(_scannedList[index].rssi.toString()),
-                    //Device State
-                    Text(device.isConnected ? "Connected" : "Disconnected"),
-                    //Device Services
-                    Text(device.remoteId.toString()),
-                    //Device Id
-                    Text(device.servicesList.toString()),
-
-                    StreamBuilder(
-                      stream: device.bondState.asBroadcastStream(),
-                      builder: (context, asyncSnapshot) {
-                        return Column(
-                          children: [
-                            Text(asyncSnapshot.connectionState.name),
-                            Text(asyncSnapshot.data.toString()),
-                          ],
-                        );
-                      },
-                    ),
-
-                    StreamBuilder(
-                      stream: device.mtu.asBroadcastStream(),
-                      builder: (context, asyncSnapshot) {
-                        return Column(
-                          children: [
-                            Text(asyncSnapshot.connectionState.name),
-                            Text(asyncSnapshot.data.toString()),
-                          ],
-                        );
-                      },
-                    ),
-
-                    /// Handling Advertisement Data
-                    Text(advertisementData.advName),
-                    Text(advertisementData.txPowerLevel.toString()),
-                    Text(advertisementData.connectable ? "Connectable" : "Not Connectable"),
-                    Text(advertisementData.appearance.toString()),
-                    Text(advertisementData.manufacturerData.entries.toList().toString()),
-                    Text(advertisementData.serviceData.entries.toList().toString()),
-                    Text(advertisementData.serviceUuids.toString()),
-                    Text(advertisementData.msd.toString()),
-
-                    // Text(advertisementData.),
-                  ],
+            return Card(
+              margin: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+              elevation: 2,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              child: ExpansionTile(
+                leading: Icon(Icons.bluetooth, color: Colors.blueAccent),
+                title: Text(
+                  device.advName.isEmpty ? device.platformName : device.advName,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Colors.blueGrey[800],
+                  ),
                 ),
+                subtitle: Text(
+                  'RSSI: ${scanResult.rssi} dBm',
+                  style: TextStyle(color: Colors.grey[600]),
+                ),
+                trailing: TextButton(
+                  onPressed: () async {
+                    // Implement connection logic here
+                    // For example: await device.connect();
+                    // Then update UI or navigate
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('Connecting to ${device.advName}...')));
+                    await _bleHidService.discoverServices(device);
+                  },
+                  child: Text(
+                    device.isConnected ? 'CONNECTED' : 'CONNECT',
+                    style: TextStyle(
+                      color: device.isConnected ? Colors.green : Colors.blueAccent,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildInfoRow('Device ID', device.remoteId.toString()),
+                        _buildInfoRow('Platform Name', device.platformName),
+                        _buildInfoRow(
+                          'Connection Status',
+                          device.isConnected ? "Connected" : "Disconnected",
+                          valueColor: device.isConnected ? Colors.green : Colors.red,
+                        ),
+                        _buildInfoRow(
+                          'Last Scan',
+                          scanResult.timeStamp.toLocal().toString().split('.')[0],
+                        ),
+                        _buildInfoRow('Services Count', device.servicesList.length.toString()),
+                        SizedBox(height: 10),
+                        Divider(color: Colors.grey[300]),
+                        Text(
+                          'Advertisement Data',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        ),
+                        _buildInfoRow('Connectable', advertisementData.connectable ? "Yes" : "No"),
+                        _buildInfoRow(
+                          'Tx Power Level',
+                          advertisementData.txPowerLevel?.toString() ?? 'N/A',
+                        ),
+                        _buildInfoRow(
+                          'Appearance',
+                          advertisementData.appearance?.toString() ?? 'N/A',
+                        ),
+                        _buildInfoRow(
+                          'Service UUIDs',
+                          advertisementData.serviceUuids.isNotEmpty
+                              ? advertisementData.serviceUuids.map((uuid) => uuid.str).join(', ')
+                              : 'None',
+                        ),
+                        _buildInfoRow(
+                          'Manufacturer Data',
+                          advertisementData.manufacturerData.isNotEmpty
+                              ? advertisementData.manufacturerData.entries
+                                    .map((e) => '${e.key}: ${e.value}')
+                                    .join(', ')
+                              : 'None',
+                        ),
+                        _buildInfoRow(
+                          'Service Data',
+                          advertisementData.serviceData.isNotEmpty
+                              ? advertisementData.serviceData.entries
+                                    .map((e) => '${e.key}: ${e.value}')
+                                    .join(', ')
+                              : 'None',
+                        ),
+                        SizedBox(height: 10),
+                        StreamBuilder<BluetoothBondState>(
+                          stream: device.bondState.asBroadcastStream(),
+                          initialData: BluetoothBondState.none,
+                          builder: (context, snapshot) {
+                            return _buildInfoRow(
+                              'Bond State',
+                              snapshot.data?.name ?? 'Unknown',
+                              valueColor: snapshot.data == BluetoothBondState.bonded
+                                  ? Colors.green
+                                  : null,
+                            );
+                          },
+                        ),
+                        StreamBuilder<int>(
+                          stream: device.mtu.asBroadcastStream(),
+                          initialData: 0,
+                          builder: (context, snapshot) {
+                            return _buildInfoRow('MTU', snapshot.data?.toString() ?? 'N/A');
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             );
           },
         ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value, {Color? valueColor}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$label: ',
+            style: TextStyle(fontWeight: FontWeight.w600, color: Colors.blueGrey[700]),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(color: valueColor ?? Colors.blueGrey[900]),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
+            ),
+          ),
+        ],
       ),
     );
   }
