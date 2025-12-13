@@ -46,6 +46,7 @@ dependencies:
   nowplaying: ^3.0.3
 
   just_audio: ^0.10.5
+  shared_preferences: ^2.5.4
 
 dev_dependencies:
   flutter_test:

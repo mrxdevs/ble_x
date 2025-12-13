@@ -1,4 +1,5 @@
 import 'package:ble_x/features/ble_keyboard/data/ble_hid_service.dart';
+import 'package:ble_x/features/ble_keyboard/data/ble_pref_service.dart';
 import 'package:ble_x/features/ble_keyboard/presentation/ble_device_details_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -13,10 +14,12 @@ class BleAsKeyboardScreen extends StatefulWidget {
 class _BleAsKeyboardScreenState extends State<BleAsKeyboardScreen> {
   //BleHidService Initialization
   final BleHidService _bleHidService = BleHidService();
+  final BlePrefService _blePrefService = BlePrefService.instance;
   List<ScanResult> _scannedList = [];
   //Scan result
 
   _scan() async {
+    final _lastConnectedDeviceId = _blePrefService.lastConnectedDeviceId;
     await _bleHidService.scan();
     final _scannedDevices = await _bleHidService.listenScannin();
     _scannedDevices.onData((scannedList) {
@@ -24,6 +27,14 @@ class _BleAsKeyboardScreenState extends State<BleAsKeyboardScreen> {
 
       if (mounted) setState(() {});
     });
+
+    //Auto connect to last connected device
+    ScanResult? _sr = _scannedList.firstWhere(
+      (device) => device.device.remoteId.toString() == _blePrefService.lastConnectedDeviceId,
+    );
+    // if (_scannedDevice != null) {
+    //   _bleHidService.connect(_scannedDevice.device);
+    // }
   }
 
   _discover() async {
@@ -90,6 +101,7 @@ class _BleAsKeyboardScreenState extends State<BleAsKeyboardScreen> {
                       // autoConnect: true,
                       // mtu: 45,
                     );
+                    BlePrefService.instance.saveConnectedDevice(device.remoteId.str);
                     setState(() {});
 
                     ScaffoldMessenger.of(
