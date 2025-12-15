@@ -38,6 +38,8 @@ class BlePrefService {
     }
   }
 
-  //4. Get last connected device id
-  String get lastConnectedDeviceId => _prefs.getString('last_connected_device_id') ?? '';
+  Future<String> lastConnectedDeviceIdAsync() async {
+    await _init();
+    return _prefs.getString('last_connected_device_id') ?? '';
+  }
 }

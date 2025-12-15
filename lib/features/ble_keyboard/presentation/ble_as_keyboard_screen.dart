@@ -18,8 +18,15 @@ class _BleAsKeyboardScreenState extends State<BleAsKeyboardScreen> {
   List<ScanResult> _scannedList = [];
   //Scan result
 
+  //Check if bluetooth is enabled
+  _checkBluetooth() async {
+    if (await FlutterBluePlus.adapterState.first != BluetoothAdapterState.on) {
+      await FlutterBluePlus.turnOn();
+    }
+  }
+
   _scan() async {
-    final _lastConnectedDeviceId = _blePrefService.lastConnectedDeviceId;
+    final _lastConnectedDeviceId = _blePrefService.lastConnectedDeviceIdAsync();
     await _bleHidService.scan();
     final _scannedDevices = await _bleHidService.listenScannin();
     _scannedDevices.onData((scannedList) {
@@ -30,7 +37,7 @@ class _BleAsKeyboardScreenState extends State<BleAsKeyboardScreen> {
 
     //Auto connect to last connected device
     ScanResult? _sr = _scannedList.firstWhere(
-      (device) => device.device.remoteId.toString() == _blePrefService.lastConnectedDeviceId,
+      (device) => device.device.remoteId.toString() == _lastConnectedDeviceId,
     );
     // if (_scannedDevice != null) {
     //   _bleHidService.connect(_scannedDevice.device);
@@ -45,6 +52,7 @@ class _BleAsKeyboardScreenState extends State<BleAsKeyboardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkBluetooth();
       _scan();
     });
   }
