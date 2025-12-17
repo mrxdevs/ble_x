@@ -1,3 +1,4 @@
+import 'package:ble_x/features/ble_keyboard/data/ble_notification_service.dart';
 import 'package:ble_x/features/ble_keyboard/presentation/ble_as_keyboard_screen.dart';
 import 'package:ble_x/features/music_control/presentation/music_control_screen.dart';
 import 'package:ble_x/core/phone_call/phone_control.dart';
@@ -12,7 +13,9 @@ import 'features/ble_plus/data/repositories/flutter_blue_plus_repository.dart';
 import 'features/ble_plus/presentation/screens/scan_screen.dart';
 import 'features/ble_plus/presentation/viewmodels/ble_viewmodel.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // await initializeBleNotificationService();
   runApp(const MyApp());
   NowPlaying.instance.start();
 }

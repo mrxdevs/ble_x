@@ -1,5 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.ble_x">
+
+    <!-- USER PERMISSIONS -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- <uses-permission android:name="android.permission.FOREGROUND_SERVICE_" /> -->
     <application
         android:label="ble_x"
         android:name="${applicationName}"
@@ -35,6 +39,16 @@
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
+        </service>
+
+        <!-- Foreground Service -->
+        <service
+            android:name="id.flutter.flutter_background_service.BackgroundService" 
+            android:foregroundServiceType="mediaPlayback"
+            
+            >
+          
+           
         </service>
         
         <!-- Don't delete the meta-data below.
