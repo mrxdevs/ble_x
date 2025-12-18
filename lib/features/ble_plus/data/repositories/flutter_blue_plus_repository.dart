@@ -87,7 +87,8 @@ class FlutterBluePlusRepository implements BleRepository {
     final nativeDevice = device.nativeDevice as BluetoothDevice;
 
     // Connect and wait for connection state
-    await nativeDevice.connect(timeout: const Duration(seconds: 15));
+    // await nativeDevice.connect(timeout: const Duration(seconds: 15));
+    await nativeDevice.connect(autoConnect: true);
 
     // Wait a bit for connection to stabilize
     await Future.delayed(const Duration(milliseconds: 500));

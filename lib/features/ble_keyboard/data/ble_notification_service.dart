@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 
@@ -8,6 +9,7 @@ import 'package:flutter_background_service_android/flutter_background_service_an
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:volume_controller/volume_controller.dart';
 
 // --- Configuration Constants ---
 const String notificationChannelId = 'ble_background_channel';
@@ -60,9 +62,15 @@ void onStart(ServiceInstance service) async {
   // 1. IMMEDIATE FOREGROUND PROMOTION (Fixes the "DidNotStartInTime" crash)
   if (service is AndroidServiceInstance) {
     service.on('setAsForeground').listen((event) {
+      print(
+        "[${DateTime.now().toIso8601String()}]Background Service: Setting as foreground with event $event",
+      );
       service.setAsForegroundService();
     });
     service.on('setAsBackground').listen((event) {
+      print(
+        "[${DateTime.now().toIso8601String()}]Background Service: Setting as background with event $event",
+      );
       service.setAsBackgroundService();
     });
 
@@ -89,7 +97,9 @@ void onStart(ServiceInstance service) async {
         if (FlutterBluePlus.connectedDevices.isEmpty) {
           await _attemptReconnection();
         } else {
-          print("Background Service: Device is already connected.");
+          print(
+            "[${DateTime.now().toIso8601String()}]Background Service: Device is already connected.",
+          );
         }
       }
     }
@@ -111,7 +121,8 @@ Future<void> _attemptReconnection() async {
       // 1. Remove 'mtu'.
       // 2. Remove 'timeout' (incompatible with autoConnect usually).
       // 3. Keep 'autoConnect: true'.
-      await device.connect(autoConnect: true);
+      // await device.connect(autoConnect: true);
+      await device.connect();
 
       // Wait for connection to actually happen before moving on
       await device.connectionState.where((s) => s == BluetoothConnectionState.connected).first;
@@ -121,7 +132,29 @@ Future<void> _attemptReconnection() async {
       // OPTIONAL: Now that we are connected, you can request MTU (Android only)
       if (Platform.isAndroid) {
         try {
-          await device.requestMtu(512);
+          final deviceMtu = await device.requestMtu(512);
+          print("Background Service: MTU Request Successful! $deviceMtu");
+          final services = await device.discoverServices();
+          services.forEach((service) {
+            print("Background Service: Service: ${service.uuid}");
+            service.characteristics.forEach((characteristic) {
+              print("Background Service: Characteristic: ${characteristic.uuid}");
+              try {
+                characteristic.setNotifyValue(true);
+              } on Exception catch (e) {
+                // TODO
+              }
+              try {
+                characteristic.value.listen((value) {
+                  print("Background Service: Characteristic Value: ${utf8.decode(value)}");
+                  VolumeController.instance.setVolume(double.parse(utf8.decode(value)));
+                });
+              } on Exception catch (e) {
+                // TODO
+              }
+              // characteristic.write([0x01]);
+            });
+          });
         } catch (e) {
           print("MTU Request failed (not critical): $e");
         }
